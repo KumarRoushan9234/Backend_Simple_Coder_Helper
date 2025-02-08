@@ -1,18 +1,19 @@
-from typing import Optional,List
-import datetime
-from pydantic import BaseModel, EmailStr, Field,constr
-from bson.objectid import ObjectId
+from typing import Optional
+from datetime import datetime
+from pydantic import BaseModel, EmailStr, Field, constr
+
 
 class UserBaseSchema(BaseModel):
     email: EmailStr = Field(...)
     name: str = Field(...)
     username: str = Field(...)
     password: str = Field(...)
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True  # Updated for Pydantic v2
+
 
 class SignUpModel(BaseModel):
     email: EmailStr = Field(...)
@@ -21,7 +22,7 @@ class SignUpModel(BaseModel):
     password: str = Field(...)
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {  # Updated for Pydantic v2
             "example": {
                 "email": "user@example.com",
                 "name": "User Name",
@@ -38,6 +39,7 @@ class LoginModel(BaseModel):
 
 class ModelSelection(BaseModel):
     model: str
+
 
 class AskModel(BaseModel):
     user_input: str
