@@ -63,3 +63,17 @@ class UserModel(BaseModel):
 class UserSelection(BaseModel):
     user_id: str
     selected_model: str
+
+
+# Model for updating user details (excluding password)
+class UpdateUserModel(BaseModel):
+    name: Optional[str] = Field(None, example="New Name")
+    username: Optional[constr(min_length=3, max_length=20)] = Field(None, example="new_username")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "name": "New Name",
+                "username": "new_username"
+            }
+        }

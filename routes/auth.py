@@ -7,7 +7,7 @@ from bson import ObjectId
 from typing import Optional
 from config import SECRET_KEY
 from database import user_collection
-from models import SignUpModel, LoginModel
+from models import SignUpModel, LoginModel, UpdateUserModel
 from utils.auth_helpers import (
     hash_password,
     verify_password,
@@ -107,3 +107,54 @@ async def get_current_user(request: Request):
         "email": user["email"],
         "username": user["username"],
     })
+
+
+# ----------------------- UPDATE USER -----------------------
+@router.put("/update-user")
+async def update_user(request: Request, data: UpdateUserModel):
+    """
+    Update user details such as name or username.
+    Authentication required (JWT token in cookies).
+    """
+    token = request.cookies.get("access_token")
+    
+    if not token:
+        return JSONResponse(status_code=401, content={"message": "Not authenticated", "success": False})
+
+    user_id = decode_jwt_token(token)
+    
+    try:
+        user_id = ObjectId(user_id)
+    except Exception:
+        return JSONResponse(status_code=401, content={"message": "Invalid token", "success": False})
+
+    user = user_collection.find_one({"_id": user_id})
+
+    if not user:
+        return JSONResponse(status_code=404, content={"message": "User not found", "success": False})
+
+    update_data = {}
+
+    # if "password" in data:
+    #     hashed_password = hash_password(data["password"])
+    #     update_data["password"] = hashed_password
+
+    # Check for username change and ensure uniqueness
+    if data.username:
+        existing_user = user_collection.find_one({"username": data.username})
+        if existing_user and str(existing_user["_id"]) != str(user_id):
+            raise HTTPException(status_code=400, detail="Username already taken")
+        update_data["username"] = data.username
+
+    # Check for name update
+    if data.name:
+        update_data["name"] = data.name
+
+    if not update_data:
+        return JSONResponse(status_code=400, content={"message": "No valid fields to update", "success": False})
+
+    # Update the user document
+    update_data["updated_at"] = datetime.utcnow()
+    user_collection.update_one({"_id": user_id}, {"$set": update_data})
+
+    return {"message": "User updated successfully", "success": True}
