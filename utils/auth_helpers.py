@@ -3,23 +3,26 @@ import jwt
 from datetime import datetime, timedelta
 from config import SECRET_KEY
 from fastapi import HTTPException
-from fastapi.responses import JSONResponse
 from bson import ObjectId
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Response, Request
 
+ALGORITHM = "HS256"
+
+# **Hash Password**: Hashes a plain password
 def hash_password(password: str) -> str:
     """Hash the password and return it as a string."""
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode("utf-8")
 
+# **Verify Password**: Compares a plain password with a hashed password
 def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify if the plain password matches the hashed password."""
     if isinstance(hashed_password, str):
         hashed_password = hashed_password.encode('utf-8')  # Ensure it's encoded if it's a string
     return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password)
 
-ALGORITHM = "HS256"
-def create_jwt_token(user_id: str):
-    # Token expiration time
+# **Create JWT Token**: Generate a JWT token for the user
+def create_jwt_token(user_id: str) -> str:
+    """Creates a JWT token with a 1-day expiration."""
     expiration = datetime.utcnow() + timedelta(days=1)
     
     payload = {
@@ -30,8 +33,9 @@ def create_jwt_token(user_id: str):
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
     return token
 
-def verify_token(authorization: str):
-    """Verify the authorization token."""
+# **Verify Token**: Validates the JWT token from the request header
+def verify_token(authorization: str) -> str:
+    """Verify the authorization token and extract the user ID."""
     if not authorization:
         raise HTTPException(status_code=403, detail="Token is missing!")
     
@@ -42,7 +46,9 @@ def verify_token(authorization: str):
     except Exception:
         raise HTTPException(status_code=403, detail="Token is invalid!")
 
-def decode_jwt_token(token: str):
+# **Decode JWT Token**: Decodes a JWT token to extract user ID (sub claim)
+def decode_jwt_token(token: str) -> Optional[str]:
+    """Decodes a JWT token and retrieves the user ID."""
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload.get("sub")  # Return 'sub' claim as user_id
@@ -51,7 +57,7 @@ def decode_jwt_token(token: str):
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-# MongoDB ObjectId serialization helper
+# **MongoDB ObjectId Serialization**: Helper function to serialize MongoDB ObjectId to string
 def str_objectid(obj):
     """Helper function to serialize MongoDB ObjectId to string."""
     if isinstance(obj, ObjectId):
