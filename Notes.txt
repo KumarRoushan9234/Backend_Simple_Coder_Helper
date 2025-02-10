@@ -5,7 +5,7 @@ __init__.py: Initializes the Flask app, loads configurations, and imports necess
 /models/: Contains the logic for MongoDB models (User and Conversation).
 /routes/: Contains all your API route definitions (such as for user actions, chat interactions, and conversation-related actions).
 /utils/: Utility folder for helper functions, including database connections or other services like Groq.
-config.py: Contains Flask app settings and environment variables like the MongoDB URI and API keys.
+config.py:  Contains a  Flask app settings and environment variables like the MongoDB URI and API keys.
 /instance/: Folder for environment-specific configurations (kept outside version control for security). The .env file will contain environment variables like the MongoDB URI and API keys.
 
 run.py: Entry point to run the Flask app. This is where you initialize the app and start the server.
